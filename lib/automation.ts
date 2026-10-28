@@ -17,7 +17,7 @@ export function rateLimited(key: string, limit: number, windowMs = 60_000) {
   return recent.length > limit;
 }
 
-export async function handle<S extends z.AnyZodObject>(
+export async function handle<S extends z.ZodObject>(
   req: Request,
   opts: {
     type: string;
@@ -45,7 +45,7 @@ export async function handle<S extends z.AnyZodObject>(
   // Honeypot filled → pretend success so bots learn nothing.
   if (data.website) return NextResponse.json({ ok: true });
 
-  const payload = envelope(req, opts.type, data.meta, opts.build(data));
+  const payload = envelope(req, opts.type, data.meta, opts.build(data as z.infer<S>));
   const result = await forward(opts.env, payload);
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: 'We could not send your request right now. Please try again shortly.' }, { status: 502 });
